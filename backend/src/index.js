@@ -5,6 +5,8 @@ const cookieParser = require("cookie-parser");
 const categoriesRouter = require("./routes/categories");
 const expensesRouter = require("./routes/expenses");
 const authRouter = require("./routes/auth");
+const accountsRouter = require("./routes/accounts");
+const goalsRouter = require("./routes/goals");
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use("/categories", categoriesRouter);
 app.use("/expenses", expensesRouter);
 app.use("/auth", authRouter);
+app.use("/accounts", accountsRouter);
+app.use("/goals", goalsRouter);
 
 const PORT = process.env.PORT || 4000;
 

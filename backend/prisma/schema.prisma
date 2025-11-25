@@ -1,8 +1,5 @@
-
-
 generator client {
   provider = "prisma-client-js"
- 
 }
 
 datasource db {
@@ -11,14 +8,18 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  email      String     @unique
-  name       String?
-  categories Category[]
-  passwordHash  String  
-  expenses   Expense[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  name         String?
+  passwordHash String  
+
+  categories   Category[]
+  expenses     Expense[]
+  accounts     Account[]   
+  goals        Goal[]
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Category {
@@ -37,10 +38,57 @@ model Expense {
   currency    String    @default("EUR")
   date        DateTime
   description String
+
   user        User      @relation(fields: [userId], references: [id])
   userId      Int
+
   category    Category? @relation(fields: [categoryId], references: [id])
   categoryId  Int?
+
+  account     Account?  @relation(fields: [accountId], references: [id]) 
+  accountId   Int?                                                         
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model Account {
+  id             Int          @id @default(autoincrement())
+  name           String
+  description    String?
+  type           AccountType  @default(CASH)
+  currency       String       @default("EUR")
+  currentBalance Int          @default(0)
+
+  user           User         @relation(fields: [userId], references: [id])
+  userId         Int          @unique
+
+  expenses       Expense[]    
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum AccountType {
+  CASH
+  DEBIT
+  CREDIT
+  SAVINGS
+  INVESTMENT
+  OTHER
+}
+
+model Goal {
+  id            Int       @id @default(autoincrement())
+  name          String
+  description    String?
+  targetAmount   Int                   
+  currentAmount  Int       @default(0)
+  currency       String    @default("EUR")
+  targetDate     DateTime
+   user           User      @relation(fields: [userId], references: [id])
+  userId        Int
+   createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+   
 }

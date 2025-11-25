@@ -1,12 +1,12 @@
 const express = require("express");
 const prisma = require("../db");
-const { getCurrentUserId } = require("../lib/helpers");
+const requireAuth = require("../middleware/requireAuth");
 const router = express.Router();
 
 // GET /expenses - Get all expenses for the current user
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUserId(req);
+    const userId = req.userId;
     const { from, to, categoryId } = req.query;
 
     const where = { userId };
@@ -41,9 +41,9 @@ router.get("/", async (req, res) => {
 
 // POST /expenses - Create a new expense for the current user
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUserId(req);
+    const userId = req.userId;
     const { amount, currency, date, categoryId, description } = req.body;
 
     // Validate input
@@ -89,9 +89,9 @@ router.post("/", async (req, res) => {
 
 // Put /expenses/:id - Update an existing expense for the current user
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUserId(req);
+    const userId = req.userId;
     const expenseId = parseInt(req.params.id, 10);
     if (isNaN(expenseId)) {
       return res.status(400).json({ error: "Invalid expense ID" });
@@ -178,9 +178,9 @@ router.put("/:id", async (req, res) => {
 
 // DELETE /expenses/:id - Delete an expense for the current user
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUserId(req);
+    const userId = req.userId;
     const expenseId = parseInt(req.params.id, 10);
     if (isNaN(expenseId)) {
       return res.status(400).json({ error: "Invalid expense ID" });

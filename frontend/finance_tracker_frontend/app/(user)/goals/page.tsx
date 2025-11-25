@@ -1,79 +1,72 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Zap, Target } from "lucide-react";
-
-const goals = [
-  {
-    id: 1,
-    name: "Down payment",
-    icon: Target,
-    saved: 11200,
-    target: 40000,
-    monthsLeft: 18,
-  },
-  {
-    id: 2,
-    name: "New car",
-    icon: Zap,
-    saved: 5800,
-    target: 35000,
-    monthsLeft: 24,
-  },
-];
-
+import { GoalForm } from "@/components/main/goalForm";
+import { GoalCard } from "@/components/main/goalCard";
+import type { Goal } from "@/lib/types";
+import { useGoals } from "@/lib/useGoals";
+import { useState } from "react";
 export default function GoalsPage() {
+  const {
+    goals,
+    loading,
+    error,
+    setError,
+    createGoal,
+    updateGoal,
+    deleteGoal,
+  } = useGoals();
+
+  const [showForm, setShowForm] = useState(false);
+
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-semibold text-balance">Goals</h1>
+        <Button onClick={() => setShowForm((prev) => !prev)}>
+          {showForm ? "Cancel" : "Add goal"}
+        </Button>
       </div>
 
-      {/* Goal Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        {goals.map((goal) => {
-          const Icon = goal.icon;
-          const percentage = (goal.saved / goal.target) * 100;
-          return (
-            <Card
+      {loading ? (
+        <p className="text-sm text-muted-foreground mb-8">
+          Loading your goals...
+        </p>
+      ) : goals.length === 0 ? (
+        <p className="text-sm text-muted-foreground mb-8">
+          You don&apos;t have any goals yet. Create one below to get started.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          {goals.map((goal) => (
+            <GoalCard
               key={goal.id}
-              className="p-6 flex flex-col justify-between hover:shadow-md transition-shadow"
-            >
-              {/* Header */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-lg">{goal.name}</h3>
-                </div>
+              goal={goal}
+              setError={setError}
+              onUpdate={async (data) => {
+                await updateGoal(goal.id, data);
+              }}
+              onDelete={() => deleteGoal(goal.id)}
+            />
+          ))}
+        </div>
+      )}
 
-                {/* Progress Bar */}
-                <div className="mb-3">
-                  <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
+      {error && (
+        <p className="text-sm text-red-600 mb-4" role="alert">
+          {error}
+        </p>
+      )}
 
-                {/* Amount */}
-                <p className="text-sm text-muted-foreground">
-                  ${goal.saved.toLocaleString()} / $
-                  {goal.target.toLocaleString()}
-                </p>
-              </div>
-
-              {/* Footer */}
-              <p className="text-sm font-medium text-primary">
-                {goal.monthsLeft} months left to goal
-              </p>
-            </Card>
-          );
-        })}
-      </div>
+      {showForm && (
+        <GoalForm
+          onCreate={async (data) => {
+            await createGoal(data);
+            setShowForm(false);
+          }}
+          setError={setError}
+        />
+      )}
 
       {/* Call to Action */}
       <div className="text-center mb-8">
@@ -89,7 +82,11 @@ export default function GoalsPage() {
           </p>
           <p className="text-muted-foreground">And just follow the plan.</p>
         </div>
-        <Button size="lg">Set up my goals</Button>
+        {!showForm && (
+          <Button size="lg" onClick={() => setShowForm(true)}>
+            Set up my goals
+          </Button>
+        )}
       </div>
     </div>
   );

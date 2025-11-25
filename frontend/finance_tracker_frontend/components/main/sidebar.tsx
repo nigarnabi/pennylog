@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { handleLogout } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/profile", label: "Profile", icon: User },
@@ -30,6 +32,11 @@ export default function Sidebar({
   setOpen: (open: boolean) => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const onLogoutClick = async () => {
+    await handleLogout();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -82,7 +89,7 @@ export default function Sidebar({
 
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border">
-          <Button variant="outline" className="w-full">
+          <Button onClick={onLogoutClick} variant="outline" className="w-full">
             Sign Out
           </Button>
         </div>

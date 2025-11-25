@@ -1,8 +1,8 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const prisma = require("../db");
+const sendTokenAsCookie = require("../lib/helpers").sendTokenAsCookie;
 const z = require("zod");
-const jwt = require("jsonwebtoken");
 const requireAuth = require("../middleware/requireAuth");
 const router = express.Router();
 
@@ -55,7 +55,18 @@ router.post("/signup", async (req, res) => {
         createdAt: true,
       },
     });
-    return res.status(201).json(newUser);
+    await prisma.account.create({
+      data: {
+        userId: newUser.id,
+        name: "Cash",
+        description: "My cash account",
+        type: "CASH",
+        currency: "EUR",
+        currentBalance: 0,
+      },
+    });
+
+    return sendTokenAsCookie(res, newUser);
   } catch (error) {
     console.error("Error during signup:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -89,32 +100,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Create JWT
-
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    // Set cookie with JWT
-
-    res.cookie("sessionToken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 1000, // 1 hour
-    });
-
-    return res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    return sendTokenAsCookie(res, user);
   } catch (error) {
     console.error("Error during login:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -141,6 +127,16 @@ router.get("/me", requireAuth, async (req, res) => {
     console.error("Error fetching current user:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
+});
+
+// POST /api/auth/logout - User logout
+router.post("logout", (req, res) => {
+  res.clearCookie("sessionToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  return res.json({ message: "Logged out successfully" });
 });
 
 module.exports = router;

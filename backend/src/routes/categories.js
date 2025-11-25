@@ -1,14 +1,13 @@
 const express = require("express");
 const prisma = require("../db");
 const router = express.Router();
-
-const { getCurrentUserId } = require("../lib/helpers");
+const requireAuth = require("../middleware/requireAuth");
 
 // GET /categories - Get all categories for the current user
 
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
-    const userId = getCurrentUserId(req);
+    const userId = req.userId;
     const categories = await prisma.category.findMany({
       where: { userId },
       orderBy: { createdAt: "asc" },
@@ -22,9 +21,9 @@ router.get("/", async (req, res) => {
 
 // POST /categories - Create a new category for the current user
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
-    const userId = getCurrectUserId(req);
+    const userId = req.userId;
     const { name } = req.body;
     if (!name || typeof name !== "string") {
       return res.status(400).json({ error: "Invalid category name" });
